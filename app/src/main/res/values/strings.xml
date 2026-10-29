@@ -9,6 +9,7 @@
     <string name="server_template" translatable="false">https://server.example.com/camevision/v1</string>
 
     <string name="tab_record">Record</string>
+    <string name="tab_usb">USB</string>
     <string name="tab_card">Card</string>
     <string name="tab_setup">Setup</string>
 
@@ -102,7 +103,7 @@
     <string name="about_board">Board %1$s</string>
     <string name="about_sensor">%1$s · %2$s · %3$d sensors</string>
     <string name="about_protocol">Protocol %1$d</string>
-    <string name="about_app">App 0.1</string>
+    <string name="about_app">App 1.2.10</string>
     <string name="qr_trigger">QR</string>
     <string name="qr_title">Trigger code</string>
     <string name="qr_label">Trigger QR</string>
@@ -130,4 +131,77 @@
     <string name="err_wifi">The camera could not save the Wi-Fi settings.</string>
     <string name="err_bluetooth">Bluetooth is off.</string>
     <string name="err_generic">Something went wrong. Try again.</string>
+
+    <string name="usb_title">USB</string>
+    <string name="usb_waiting">Plug the camera in with a USB 3 cable. The phone is the host.</string>
+    <string name="usb_connecting">Connecting to the camera…</string>
+    <string name="usb_opening">Opening the picture…</string>
+    <string name="usb_opening_still">Still opening the picture…</string>
+    <string name="usb_permission">Allow CameVision to use this USB device.</string>
+    <string name="usb_ready">%1$s · %2$d×%3$d · %4$d fps</string>
+    <string name="usb_dual">two cameras</string>
+    <string name="usb_single">one camera</string>
+    <string name="usb_buffer">microSD buffer</string>
+    <string name="usb_buffer_help">On: the camera keeps the session on the card, then this phone downloads it. Off: this phone writes the session directly.</string>
+    <string name="usb_frames">Left %1$d · right %2$d</string>
+    <string name="usb_sessions">On this phone</string>
+    <string name="usb_none">No USB sessions yet.</string>
+    <string name="usb_view">View</string>
+    <string name="usb_upload">Upload</string>
+    <string name="usb_no_card">No microSD card in the camera.</string>
+    <string name="usb_no_function">The camera is on its computer USB mode. Reboot it once after the phone function is installed.</string>
+    <string name="usb_keeping">CameVision USB recording</string>
+    <string name="usb_name_ego">CameVision Ego</string>
+    <string name="usb_name_single">CameVision</string>
+    <string name="usb_eye_left">Left</string>
+    <string name="usb_eye_right">Right</string>
+    <string name="usb_eye_both">Both</string>
+    <string name="usb_eye_depth">Depth</string>
+    <string name="usb_open_view">Open camera view</string>
+    <string name="usb_live">Live view</string>
+    <string name="usb_imu_title">IMU</string>
+    <string name="usb_imu_open">Open</string>
+    <string name="usb_imu0">IMU 0</string>
+    <string name="usb_imu1">IMU 1</string>
+    <string name="usb_cam0">Left camera</string>
+    <string name="usb_cam1">Right camera</string>
+    <string name="usb_imu_waiting">Waiting for samples</string>
+    <string name="usb_imu_brief">a %1$.1f %2$.1f %3$.1f · g %4$.1f %5$.1f %6$.1f</string>
+    <string name="usb_imu_meta">%1$.0f Hz · %2$s</string>
+    <string name="usb_accel">Accelerometer</string>
+    <string name="usb_gyro">Gyroscope</string>
+    <string name="usb_rate">Sample rate</string>
+    <string name="usb_time">Monotonic time</string>
+    <string name="usb_record_line">%1$d×%2$d %3$s · %4$d fps</string>
+    <string name="usb_record_eyes_two">Both eyes · two IMUs</string>
+    <string name="usb_record_eyes_one">One eye · one IMU</string>
+    <string name="usb_speed_super">USB 3</string>
+    <string name="usb_speed_high">USB</string>
+
+    <string name="first_title">CameVision</string>
+    <string name="first_sub">Choose how this phone uses the camera. You can change this later in Setup.</string>
+    <string name="lang_label">Language</string>
+    <string name="lang_en">English</string>
+    <string name="lang_zh">中文</string>
+    <string name="role_label">This phone</string>
+    <string name="role_usb">USB recording and viewing</string>
+    <string name="role_usb_help">Live view, record both eyes and both IMUs, and keep the files on this phone.</string>
+    <string name="role_ble">Bluetooth control only</string>
+    <string name="role_ble_help">Pair the camera, record onto the card, and send the recordings.</string>
+    <string name="first_continue">Continue</string>
+    <string name="role_switch">Function</string>
+    <string name="usb_live_paused">Live view pauses while recording so the video stays smooth.</string>
+    <string name="usb_tree_title">Where recordings go</string>
+    <string name="usb_tree_body">Each recording is one folder under My Recordings. episode holds the video, timestamps, and IMU logs. synced holds the matched frames.</string>
+    <string name="usb_tree_example" translatable="false">My Recordings/&lt;session&gt;/\nepisode/cam_left.mp4\nepisode/cam_right.mp4\nepisode/cam_left.timestamps.jsonl\nepisode/cam_right.timestamps.jsonl\nepisode/imu_left.jsonl\nepisode/imu_right.jsonl\nepisode/manifest.json\nsynced/frame_map.jsonl\nsynced/sync_report.json</string>
+    <string name="usb_phone_root">On this phone: %1$s</string>
+    <string name="usb_internal">Internal storage%1$s</string>
+    <string name="usb_writing">Writing My Recordings/%1$s</string>
+    <string name="usb_writing_wait">Writing My Recordings/…</string>
+    <string name="usb_sd_path">Camera microSD: %1$s</string>
+    <string name="usb_sd_then">The camera keeps this session on the microSD card. After stop, the same My Recordings folder is downloaded to this phone.</string>
+    <string name="usb_recorded_on">Recorded on the camera at %1$s</string>
+    <string name="usb_copy_path">Copy path</string>
+    <string name="usb_copied">Path copied</string>
+    <string name="usb_files">Files</string>
 </resources>

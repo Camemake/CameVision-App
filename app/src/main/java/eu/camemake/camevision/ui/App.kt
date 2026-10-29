@@ -33,6 +33,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.SdCard
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Usb
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
@@ -40,6 +41,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -63,13 +66,16 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import eu.camemake.camevision.AppPrefs
+import eu.camemake.camevision.AppRole
 import eu.camemake.camevision.CameVisionModel
 import eu.camemake.camevision.R
 import eu.camemake.camevision.TransferHub
+import eu.camemake.camevision.UsbHub
 import eu.camemake.camevision.frontTitle
 import eu.camemake.camevision.isServerTemplate
 
-private enum class Tab { Record, Card, Setup }
+private enum class Tab { Record, Card, Setup, Usb }
 
 @Composable
 fun CameVisionApp(model: CameVisionModel = viewModel()) {
@@ -81,16 +87,48 @@ fun CameVisionApp(model: CameVisionModel = viewModel()) {
     val draft by model.draft.collectAsState()
     val transfer by TransferHub.state.collectAsState()
     val saved by model.saved.collectAsState()
-    var tabIndex by rememberSaveable { mutableIntStateOf(0) }
+    val usb by UsbHub.state.collectAsState()
+    var tabIndex by rememberSaveable { mutableIntStateOf(if (AppPrefs.role.value == AppRole.Usb) 3 else 0) }
     val tab = when (tabIndex) {
         1 -> Tab.Card
         2 -> Tab.Setup
+        3 -> Tab.Usb
         else -> Tab.Record
     }
     var sendTarget by rememberSaveable { mutableStateOf("") }
     var removeAfter by rememberSaveable { mutableStateOf(false) }
+    var seenUsb by remember { mutableStateOf(UsbHub.state.value.open) }
     val context = LocalContext.current
+    val role by AppPrefs.role.collectAsState()
+    if (role == AppRole.Unset) {
+        FirstRunScreen()
+        return
+    }
     val previewOpen = previewUntil > 0L
+    val usbName = if (usb.sensors >= 2) {
+        stringResource(R.string.usb_name_ego)
+    } else {
+        stringResource(R.string.usb_name_single)
+    }
+
+    DisposableEffect(role) {
+        if (role == AppRole.Usb) {
+            UsbHub.register(context.applicationContext)
+            UsbHub.refresh(context)
+        }
+        onDispose { }
+    }
+    LaunchedEffect(role) {
+        when (role) {
+            AppRole.Usb -> if (tabIndex == 0 || tabIndex == 1) tabIndex = 3
+            AppRole.Bluetooth -> if (tabIndex == 3) tabIndex = 0
+            AppRole.Unset -> Unit
+        }
+    }
+    LaunchedEffect(usb.open) {
+        if (role == AppRole.Usb && usb.open && !seenUsb) tabIndex = 3
+        seenUsb = usb.open
+    }
 
     val permissions = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions(),
@@ -128,9 +166,13 @@ fun CameVisionApp(model: CameVisionModel = viewModel()) {
             contentWindowInsets = WindowInsets(0, 0, 0, 0),
             topBar = {
                 BrandBar(
-                    connected = link.transport == "ble",
-                    name = frontTitle(link.transport == "ble", link.status, link.name),
-                    onConnect = { connect() },
+                    connected = if (role == AppRole.Usb) usb.open else link.transport == "ble",
+                    name = when {
+                        role == AppRole.Usb && usb.open -> usbName
+                        role == AppRole.Bluetooth && link.transport == "ble" -> frontTitle(true, link.status, link.name)
+                        else -> ""
+                    },
+                    onConnect = { if (role == AppRole.Usb) tabIndex = 3 else connect() },
                 )
             },
             bottomBar = {
@@ -143,8 +185,13 @@ fun CameVisionApp(model: CameVisionModel = viewModel()) {
                         ),
                 ) {
                     Row(Modifier.fillMaxWidth().heightIn(min = 64.dp)) {
-                        BottomItem(stringResource(R.string.tab_record), Icons.Filled.PhotoCamera, tab == Tab.Record, Modifier.weight(1f)) { tabIndex = 0 }
-                        BottomItem(stringResource(R.string.tab_card), Icons.Filled.SdCard, tab == Tab.Card, Modifier.weight(1f)) { tabIndex = 1 }
+                        if (role == AppRole.Bluetooth) {
+                            BottomItem(stringResource(R.string.tab_record), Icons.Filled.PhotoCamera, tab == Tab.Record, Modifier.weight(1f)) { tabIndex = 0 }
+                            BottomItem(stringResource(R.string.tab_card), Icons.Filled.SdCard, tab == Tab.Card, Modifier.weight(1f)) { tabIndex = 1 }
+                        }
+                        if (role == AppRole.Usb) {
+                            BottomItem(stringResource(R.string.tab_usb), Icons.Filled.Usb, tab == Tab.Usb, Modifier.weight(1f)) { tabIndex = 3 }
+                        }
                         BottomItem(stringResource(R.string.tab_setup), Icons.Filled.Settings, tab == Tab.Setup, Modifier.weight(1f)) { tabIndex = 2 }
                     }
                 }
@@ -155,9 +202,10 @@ fun CameVisionApp(model: CameVisionModel = viewModel()) {
                     .padding(padding)
                     .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal)),
             ) {
-                when (tab) {
+                when (if (role == AppRole.Usb && (tab == Tab.Record || tab == Tab.Card)) Tab.Usb else if (role == AppRole.Bluetooth && tab == Tab.Usb) Tab.Record else tab) {
                     Tab.Record -> RecordScreen(model, link, transfer, banner, { connect() }) { askSend("*") }
                     Tab.Card -> CardScreen(model, link, banner) { askSend(it) }
+                    Tab.Usb -> UsbScreen()
                     Tab.Setup -> SetupScreen(
                         model = model,
                         link = link,
@@ -168,6 +216,9 @@ fun CameVisionApp(model: CameVisionModel = viewModel()) {
                         onForget = { model.forget() },
                         onBluetooth = {
                             context.startActivity(Intent(Settings.ACTION_BLUETOOTH_SETTINGS))
+                        },
+                        onRole = { next ->
+                            tabIndex = if (next == AppRole.Usb) 3 else 0
                         },
                     )
                 }

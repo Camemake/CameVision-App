@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Rockchip VID used by CameVision Ego (ADB) and CameVision Single (UVC). -->
+    <usb-device vendor-id="8711" />
+</resources>

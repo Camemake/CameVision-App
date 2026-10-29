@@ -37,6 +37,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -44,11 +45,14 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import eu.camemake.camevision.AppPrefs
+import eu.camemake.camevision.AppRole
 import eu.camemake.camevision.CameVisionModel
 import eu.camemake.camevision.CaptureMode
 import eu.camemake.camevision.FoundDevice
 import eu.camemake.camevision.LinkState
 import eu.camemake.camevision.R
+import eu.camemake.camevision.UsbHub
 import eu.camemake.camevision.WifiNet
 import eu.camemake.camevision.frontTitle
 import eu.camemake.camevision.isStereo
@@ -64,12 +68,18 @@ fun SetupScreen(
     onPick: (FoundDevice) -> Unit,
     onForget: () -> Unit,
     onBluetooth: () -> Unit,
+    onRole: (AppRole) -> Unit,
 ) {
+    val context = LocalContext.current
+    val role by AppPrefs.role.collectAsState()
+    val language by AppPrefs.language.collectAsState()
+    val usb by UsbHub.state.collectAsState()
     val draft by model.draft.collectAsState()
     val online = draft.mode == CaptureMode.Online
+    val busy = link.status.recording || usb.recording
     var showPassword by rememberSaveable { mutableStateOf(false) }
-    LaunchedEffect(link.transport) {
-        if (link.transport.isNotEmpty()) model.scanWifi()
+    LaunchedEffect(link.transport, role) {
+        if (role == AppRole.Bluetooth && link.transport.isNotEmpty()) model.scanWifi()
     }
     Column(
         Modifier
@@ -79,6 +89,34 @@ fun SetupScreen(
     ) {
         Text(stringResource(R.string.setup_title), fontWeight = FontWeight.ExtraBold, fontSize = 32.sp, color = CameInk)
         Spacer(Modifier.height(16.dp))
+        FieldCard {
+            SectionLabel(stringResource(R.string.lang_label))
+            LanguageSwitch(language.ifBlank { "en" }) { AppPrefs.selectLanguage(context, it) }
+        }
+        Spacer(Modifier.height(12.dp))
+        FieldCard {
+            SectionLabel(stringResource(R.string.role_switch))
+            ChoiceCard(
+                stringResource(R.string.role_usb),
+                stringResource(R.string.role_usb_help),
+                role == AppRole.Usb,
+            ) {
+                if (busy || role == AppRole.Usb) return@ChoiceCard
+                AppPrefs.setRole(context, AppRole.Usb)
+                onRole(AppRole.Usb)
+            }
+            ChoiceCard(
+                stringResource(R.string.role_ble),
+                stringResource(R.string.role_ble_help),
+                role == AppRole.Bluetooth,
+            ) {
+                if (busy || role == AppRole.Bluetooth) return@ChoiceCard
+                AppPrefs.setRole(context, AppRole.Bluetooth)
+                onRole(AppRole.Bluetooth)
+            }
+        }
+        if (role == AppRole.Bluetooth) {
+        Spacer(Modifier.height(12.dp))
         FieldCard {
             SectionLabel(stringResource(R.string.bt_label))
             if (!bluetoothOn) {
@@ -123,12 +161,15 @@ fun SetupScreen(
                 }
             }
         }
+        }
+        if (role == AppRole.Bluetooth) {
         Spacer(Modifier.height(12.dp))
         FieldCard {
             SectionLabel(stringResource(R.string.mode_label))
             ModeSwitch(online = online, enabled = !link.status.recording) { wantServer ->
                 model.setMode(if (wantServer) CaptureMode.Online else CaptureMode.Standalone)
             }
+        }
         }
         Spacer(Modifier.height(12.dp))
         FieldCard {
@@ -150,6 +191,7 @@ fun SetupScreen(
                 visualTransformation = PasswordVisualTransformation(),
             )
         }
+        if (role == AppRole.Bluetooth) {
         Spacer(Modifier.height(12.dp))
         FieldCard {
             SectionLabel(stringResource(R.string.wifi_label))
@@ -235,6 +277,7 @@ fun SetupScreen(
                 singleLine = true,
                 label = { Text(stringResource(R.string.qr_value)) },
             )
+        }
         }
         Spacer(Modifier.height(16.dp))
         PinkButton(stringResource(R.string.save), Modifier.fillMaxWidth()) { model.save() }

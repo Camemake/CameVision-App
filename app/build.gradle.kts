@@ -12,8 +12,8 @@ android {
         applicationId = "eu.camemake.camevision"
         minSdk = 24
         targetSdk = 34
-        versionCode = 13
-        versionName = "0.1"
+        versionCode = 130
+        versionName = "1.2.10"
     }
 
     buildTypes {

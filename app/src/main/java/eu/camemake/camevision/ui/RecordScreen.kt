@@ -132,9 +132,18 @@ fun RecordScreen(
             TransferLine(transfer, model)
         }
         Spacer(Modifier.height(16.dp))
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            QuietButton(stringResource(R.string.preview), Modifier.weight(1f)) { model.startPreview() }
-            QuietButton(stringResource(R.string.qr_trigger), Modifier.weight(1f)) { model.openQr() }
+        if (status.recording) {
+            Text(
+                stringResource(R.string.usb_live_paused),
+                color = CameMuted,
+                fontSize = 14.sp,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        } else {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                QuietButton(stringResource(R.string.preview), Modifier.weight(1f)) { model.startPreview() }
+                QuietButton(stringResource(R.string.qr_trigger), Modifier.weight(1f)) { model.openQr() }
+            }
         }
         Spacer(Modifier.height(10.dp))
         val sendLabel = stringResource(if (online) R.string.send_leftovers else R.string.send)

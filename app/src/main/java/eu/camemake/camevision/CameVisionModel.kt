@@ -54,7 +54,7 @@ class CameVisionModel(app: Application) : AndroidViewModel(app) {
         }
         viewModelScope.launch {
             val cfg = store.config.first()
-            if (cfg.address.isNotBlank() && btGranted()) {
+            if (AppPrefs.role.value == AppRole.Bluetooth && cfg.address.isNotBlank() && btGranted()) {
                 link.connect(cfg.address)
             }
         }
@@ -130,6 +130,7 @@ class CameVisionModel(app: Application) : AndroidViewModel(app) {
             link.setRecording(false)
             link.command("""{"cmd":"stop"}""")
         } else {
+            stopPreview()
             link.setRecording(true)
             val mode = draft.value.mode.wire()
             link.command("""{"cmd":"start","mode":"$mode"}""")
